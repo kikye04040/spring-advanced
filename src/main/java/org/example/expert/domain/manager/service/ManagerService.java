@@ -73,6 +73,7 @@ public class ManagerService {
         return dtoList;
     }
 
+    // 기존 구조는 유지하며 userId 를 인자로 사용
     @Transactional
     public void deleteManager(long userId, long todoId, long managerId) {
         User user = userRepository.findById(userId)
@@ -81,17 +82,27 @@ public class ManagerService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new InvalidRequestException("Todo not found"));
 
-        if (todo.getUser() == null || !ObjectUtils.nullSafeEquals(user.getId(), todo.getUser().getId())) {
-            throw new InvalidRequestException("해당 일정을 만든 유저가 유효하지 않습니다.");
-        }
+        // 일정 소유자가 맞는지 확인
+        validateTodoOwnership(userId, todo);
 
         Manager manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new InvalidRequestException("Manager not found"));
 
+        // 매니저가 일정에 속해 있는지 확인
+        validateManagerOwnership(manager, todo);
+
+        managerRepository.delete(manager);
+    }
+
+    private void validateTodoOwnership(long userId, Todo todo) {
+        if (todo.getUser() == null || !ObjectUtils.nullSafeEquals(userId, todo.getUser().getId())) {
+            throw new InvalidRequestException("해당 일정을 만든 유저가 유효하지 않습니다.");
+        }
+    }
+
+    private void validateManagerOwnership(Manager manager, Todo todo) {
         if (!ObjectUtils.nullSafeEquals(todo.getId(), manager.getTodo().getId())) {
             throw new InvalidRequestException("해당 일정에 등록된 담당자가 아닙니다.");
         }
-
-        managerRepository.delete(manager);
     }
 }
