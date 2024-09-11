@@ -44,6 +44,10 @@ dependencies {
 
     // aop
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // Mockito
+    testImplementation 'org.mockito:mockito-core:4.0.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.0.0'
 }
 
 tasks.named('test') {
